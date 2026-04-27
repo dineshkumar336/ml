@@ -1,0 +1,9 @@
+.DS_Store
+Thumbs.db
+*.log
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
+.idea/
+venv/
+.env
