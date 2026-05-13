@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+{% block title %}Batch Mode — PriorityAI{% endblock %}
+
+{% block head %}
+<style>
+    .batch-layout {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 32px;
+        align-items: start;
+    }
+
+    .upload-panel {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+        position: sticky;
+        top: 88px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .upload-panel h2 {
+        font-family: var(--font-head);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+    }
+
+    /* Drop zone */
+    .drop-zone {
+        border: 2px dashed var(--border-strong);
+        border-radius: 12px;
+        padding: 40px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 20px;
+        position: relative;
+        background: var(--bg);
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+        border-color: var(--accent);
+        background: var(--accent-light);
+    }
+
+    .drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+
+    .drop-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .drop-zone p {
+        font-size: 0.875rem;
+        color: var(--muted);
+    }
+
+    .drop-zone strong {
+        color: var(--accent);
+    }
+
+    .file-selected {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: var(--low-bg);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 10px;
+        margin-bottom: 16px;
+        font-size: 0.875rem;
+        color: #065f46;
+        font-weight: 500;
+    }
+
+    /* Schema guide */
+    .schema-box {
+        background: var(--bg3);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        font-size: 0.8rem;
+        border: 1px solid var(--border);
+    }
+
+    .schema-box .s-title {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.7rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .schema-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid var(--border);
+        font-family: monospace;
+    }
+
+    .schema-row:last-child {
+        border-bottom: none;
+    }
+
+    .schema-row .col-name {
+        color: var(--accent);
+        font-weight: 700;
+    }
+
+    .schema-row .col-type {
+        color: var(--muted);
+    }
+
+    /* Results area */
+    .results-area {
+        /* placeholder */
+    }
+
+    .results-empty {
+        background: var(--bg2);
+        border: 1.5px dashed var(--border-strong);
+        border-radius: var(--radius);
+        padding: 80px 40px;
+        text-align: center;
+        color: var(--muted);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .results-empty .icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+
+    /* Summary cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .sum-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+        animation: slideUp 0.4s ease both;
+    }
+
+    .sum-card .num {
+        font-family: var(--font-head);
+        font-size: 1.8rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+
+    .sum-card .lbl {
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+
+    /* Priority bars */
+    .priority-breakdown {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-sm);
+        animation: slideUp 0.5s 0.1s ease both;
+    }
+
+    .priority-breakdown h3 {
+        font-family: var(--font-head);
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 20px;
+    }
+
+    .p-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .p-bar-label {
+        width: 70px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .p-bar-wrap {
+        flex: 1;
+        height: 8px;
+        background: var(--bg3);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .p-bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .p-bar-count {
+        width: 40px;
+        text-align: right;
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-weight: 500;
+    }
+
+    /* Top 10 table */
+    .top-section {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-sm);
+        animation: slideUp 0.5s 0.2s ease both;
+    }
+
+    .top-section-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg3);
+    }
+
+    .top-section-header h3 {
+        font-family: var(--font-head);
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .progress-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(248, 249, 252, 0.85);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+
+    .progress-box {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        min-width: 320px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .progress-box .big-spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid var(--bg3);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    .progress-box h3 {
+        font-family: var(--font-head);
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--text);
+    }
+
+    .progress-box p {
+        color: var(--muted);
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 900px) {
+        .batch-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .upload-panel {
+            position: static;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="eyebrow">Batch Mode</div>
+        <h1>Batch Database Processing</h1>
+        <p>Upload your entire complaint database as a CSV. Get back a fully prioritized, urgency-ranked file in minutes.</p>
+    </div>
+
+    <div class="batch-layout">
+        <!-- UPLOAD PANEL -->
+        <div class="upload-panel">
+            <h2>Upload CSV File</h2>
+
+            <div class="drop-zone" id="dropZone">
+                <input type="file" id="csvFile" accept=".csv" onchange="onFileSelect(this)">
+                <div class="drop-icon">📂</div>
+                <p><strong>Click to upload</strong> or drag and drop<br>CSV files only</p>
+            </div>
+
+            <div class="file-selected" id="fileSelected">
+                <span>✓</span>
+                <span id="fileName">file.csv</span>
+            </div>
+
+            <div class="schema-box">
+                <div class="s-title">Required CSV Columns</div>
+                <div class="schema-row">
+                    <span class="col-name">Sector</span>
+                    <span class="col-type">text</span>
+                </div>
+                <div class="schema-row">
+                    <span class="col-name">Product</span>
+                    <span class="col-type">text</span>
+                </div>
+                <div class="schema-row">
+                    <span class="col-name">Complaint_Narrative</span>
+                    <span class="col-type">text</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="runBtn" onclick="runBatch()"
+                style="width:100%;justify-content:center;margin-bottom:10px" disabled>
+                Run Batch Analysis →
+            </button>
+            <button class="btn btn-outline" id="dlBtn" onclick="downloadResults()"
+                style="width:100%;justify-content:center;display:none">
+                ⬇ Download Results CSV
+            </button>
+
+            <p style="font-size:0.75rem;color:var(--muted2);margin-top:12px;text-align:center">
+                Maximum 10,000 complaints per batch
+            </p>
+        </div>
+
+        <!-- RESULTS AREA -->
+        <div class="results-area">
+            <div id="resultsEmpty" class="results-empty">
+                <div class="icon">📊</div>
+                <p>Upload a CSV file and run batch analysis<br>to see prioritized results here</p>
+            </div>
+            <div id="resultsContent" style="display:none"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="progress-overlay" id="progressOverlay">
+    <div class="progress-box">
+        <div class="big-spinner"></div>
+        <h3>Analyzing Complaints</h3>
+        <p id="progressMsg">Running BERT inference on your dataset...<br>This may take a moment.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Drag and drop
+    const dz = document.getElementById('dropZone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => {
+        e.preventDefault(); dz.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && file.name.endsWith('.csv')) {
+            document.getElementById('csvFile').files = e.dataTransfer.files;
+            onFileSelect({ files: e.dataTransfer.files });
+        }
+    });
+
+    function onFileSelect(input) {
+        const file = input.files[0];
+        if (!file) return;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSelected').style.display = 'flex';
+        document.getElementById('runBtn').disabled = false;
+    }
+
+    async function runBatch() {
+        const file = document.getElementById('csvFile').files[0];
+        if (!file) { showToast('Please select a CSV file', 'error'); return; }
+
+        document.getElementById('progressOverlay').style.display = 'flex';
+        document.getElementById('runBtn').disabled = true;
+
+        const form = new FormData();
+        form.append('csv_file', file);
+
+        try {
+            const res = await fetch('/api/predict/batch', { method: 'POST', body: form });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+            renderResults(data);
+            document.getElementById('dlBtn').style.display = 'block';
+            showToast(`Analyzed ${data.total} complaints successfully!`, 'success');
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        } finally {
+            document.getElementById('progressOverlay').style.display = 'none';
+            document.getElementById('runBtn').disabled = false;
+        }
+    }
+
+    function renderResults(d) {
+        const pc = d.priority_counts;
+        const total = d.total;
+        const high   = pc.High   || 0;
+        const medium = pc.Medium || 0;
+        const low    = pc.Low    || 0;
+
+        const topRows = d.top10.map((r, i) => `
+    <tr>
+      <td style="color:var(--muted);font-weight:600">#${i + 1}</td>
+      <td>${r.Sector}</td>
+      <td>${r.Product}</td>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Complaint_Narrative}">${r.Complaint_Narrative}</td>
+      <td><span class="badge badge-${r.priority_label.toLowerCase()}">${r.priority_label}</span></td>
+      <td style="font-weight:700;color:${r.priority_label === 'High' ? 'var(--high)' : r.priority_label === 'Medium' ? 'var(--medium)' : 'var(--low)'}">${r.urgency_score}</td>
+    </tr>`).join('');
+
+        const html = `
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="num" style="color:var(--accent)">${total}</div>
+        <div class="lbl">Total Complaints</div>
+      </div>
+      <div class="sum-card">
+        <div class="num" style="color:var(--high)">${high}</div>
+        <div class="lbl">High Priority</div>
+      </div>
+      <div class="sum-card">
+        <div class="num" style="color:var(--medium)">${medium}</div>
+        <div class="lbl">Medium Priority</div>
+      </div>
+      <div class="sum-card">
+        <div class="num" style="color:var(--low)">${low}</div>
+        <div class="lbl">Low Priority</div>
+      </div>
+    </div>
+
+    <div class="priority-breakdown">
+      <h3>Priority Distribution</h3>
+      <div class="p-bar-row">
+        <div class="p-bar-label" style="color:var(--high)">High</div>
+        <div class="p-bar-wrap"><div class="p-bar-fill" style="width:${high / total * 100}%;background:var(--high)"></div></div>
+        <div class="p-bar-count">${high}</div>
+      </div>
+      <div class="p-bar-row">
+        <div class="p-bar-label" style="color:var(--medium)">Medium</div>
+        <div class="p-bar-wrap"><div class="p-bar-fill" style="width:${medium / total * 100}%;background:var(--medium)"></div></div>
+        <div class="p-bar-count">${medium}</div>
+      </div>
+      <div class="p-bar-row">
+        <div class="p-bar-label" style="color:var(--low)">Low</div>
+        <div class="p-bar-wrap"><div class="p-bar-fill" style="width:${low / total * 100}%;background:var(--low)"></div></div>
+        <div class="p-bar-count">${low}</div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:0.875rem">
+        <span style="color:var(--muted)">Mean Urgency Score</span>
+        <span style="font-weight:700;color:var(--text)">${d.mean_urgency} / 10</span>
+      </div>
+    </div>
+
+    <div class="top-section">
+      <div class="top-section-header">
+        <h3>🔥 Top 10 Most Urgent Complaints</h3>
+        <span class="badge badge-high">Sorted by urgency</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Sector</th><th>Product</th>
+              <th>Complaint</th><th>Priority</th><th>Urgency</th>
+            </tr>
+          </thead>
+          <tbody>${topRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+        document.getElementById('resultsEmpty').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'block';
+        document.getElementById('resultsContent').innerHTML = html;
+    }
+
+    async function downloadResults() {
+        window.location.href = '/api/download/batch';
+    }
+</script>
+{% endblock %}

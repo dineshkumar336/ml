@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+{% block title %}Fine-Tune — PriorityAI{% endblock %}
+
+{% block head %}
+<style>
+    .ft-layout {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 32px;
+        align-items: start;
+    }
+
+    .ft-panel {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+        position: sticky;
+        top: 88px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .ft-panel h2 {
+        font-family: var(--font-head);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+    }
+
+    /* Toggle */
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 20px;
+    }
+
+    .toggle-info .t-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text2);
+    }
+
+    .toggle-info .t-desc {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-track {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: var(--bg3);
+        border-radius: 100px;
+        border: 1.5px solid var(--border-strong);
+        transition: 0.2s;
+    }
+
+    .toggle-track::after {
+        content: '';
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--muted2);
+        transition: 0.2s;
+    }
+
+    .toggle-switch input:checked + .toggle-track {
+        background: var(--accent-light);
+        border-color: var(--accent);
+    }
+
+    .toggle-switch input:checked + .toggle-track::after {
+        transform: translateX(20px);
+        background: var(--accent);
+    }
+
+    /* Number input */
+    .number-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .num-btn {
+        width: 36px;
+        height: 36px;
+        background: var(--bg3);
+        border: 1.5px solid var(--border-strong);
+        border-radius: 8px;
+        color: var(--text2);
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+
+    .num-btn:hover {
+        background: var(--accent-light);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .num-display {
+        flex: 1;
+        text-align: center;
+        font-family: var(--font-head);
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    /* Drop zone for fine-tune */
+    .drop-zone {
+        border: 2px dashed var(--border-strong);
+        border-radius: 12px;
+        padding: 24px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 0;
+        position: relative;
+        background: var(--bg);
+    }
+
+    .drop-zone:hover {
+        border-color: var(--accent);
+        background: var(--accent-light);
+    }
+
+    .drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+
+    .file-selected {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--low-bg);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 10px;
+        font-size: 0.875rem;
+        color: #065f46;
+        font-weight: 500;
+    }
+
+    /* Info panel */
+    .info-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .info-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .info-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+    }
+
+    .info-card h3 {
+        font-family: var(--font-head);
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+    }
+
+    .info-card p {
+        color: var(--muted);
+        font-size: 0.875rem;
+        line-height: 1.65;
+        margin-bottom: 12px;
+    }
+
+    .info-card p:last-child {
+        margin-bottom: 0;
+    }
+
+    .schema-inline {
+        background: var(--bg3);
+        border-radius: 10px;
+        padding: 14px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: var(--accent);
+        line-height: 1.8;
+        border: 1px solid var(--border);
+    }
+
+    .samples-guide {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .sg-item {
+        background: var(--bg3);
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+
+    .sg-item .sg-num {
+        font-family: var(--font-head);
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .sg-item .sg-lbl {
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    /* Status card */
+    .status-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 48px;
+        text-align: center;
+        animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: var(--shadow);
+    }
+
+    .status-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+
+    .status-card h3 {
+        font-family: var(--font-head);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: var(--text);
+    }
+
+    .status-card p {
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        max-width: 400px;
+        margin: 0 auto 24px;
+    }
+
+    .training-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 28px;
+        text-align: left;
+    }
+
+    .ti-box {
+        background: var(--bg3);
+        border-radius: 10px;
+        padding: 16px;
+        border: 1px solid var(--border);
+    }
+
+    .ti-box .ti-l {
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .ti-box .ti-v {
+        font-family: var(--font-head);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    @media (max-width: 900px) {
+        .ft-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .ft-panel {
+            position: static;
+        }
+
+        .samples-guide,
+        .training-info {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="eyebrow">Domain Fine-Tuning</div>
+        <h1>Customize the Model for Your Domain</h1>
+        <p>Upload labeled complaint data to fine-tune PriorityAI specifically for your sector, products, and customers — unlocking higher accuracy tailored to your needs.</p>
+    </div>
+
+    <div class="ft-layout">
+        <!-- LEFT PANEL -->
+        <div class="ft-panel">
+            <h2>Training Configuration</h2>
+
+            <div class="form-group">
+                <label>Organization Name</label>
+                <input type="text" id="companyName" placeholder="e.g. MyBank, HealthCorp..." />
+            </div>
+
+            <div class="form-group">
+                <label>Upload Labeled CSV</label>
+                <div class="drop-zone" style="padding:24px 16px;margin-bottom:0">
+                    <input type="file" id="labeledCsv" accept=".csv" onchange="onFtFileSelect(this)">
+                    <div style="font-size:1.5rem;margin-bottom:8px">📋</div>
+                    <p style="font-size:0.8rem;color:var(--muted)"><strong style="color:var(--accent)">Click to
+                            upload</strong> labeled CSV</p>
+                </div>
+                <div class="file-selected" id="ftFileSelected" style="margin-top:10px">
+                    <span>✓</span><span id="ftFileName">file.csv</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Training Epochs</label>
+                <div class="number-row">
+                    <button class="num-btn" onclick="changeEpochs(-1)">−</button>
+                    <div class="num-display" id="epochDisplay">3</div>
+                    <button class="num-btn" onclick="changeEpochs(1)">+</button>
+                </div>
+                <p style="font-size:0.75rem;color:var(--muted)">Recommended: 3 epochs for &lt;500 samples, 5 for 500+
+                </p>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="t-label">Freeze BERT Backbone</div>
+                    <div class="t-desc">Recommended for &lt;500 samples</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="freezeBert" checked>
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+
+            <button class="btn btn-primary" id="ftBtn" onclick="startFinetune()"
+                style="width:100%;justify-content:center" disabled>
+                Start Fine-Tuning →
+            </button>
+
+            <p style="font-size:0.75rem;color:var(--muted2);text-align:center;margin-top:12px">
+                Training takes 5–15 minutes depending on dataset size
+            </p>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="ft-right">
+            <div id="ftStatus" style="display:none"></div>
+
+            <div id="ftInfo" class="info-cards">
+                <div class="info-card reveal">
+                    <h3><span>📋</span> Required CSV Format</h3>
+                    <p>Your labeled CSV must contain all 5 columns:</p>
+                    <div class="schema-inline">
+                        Sector, Product, Complaint_Narrative,<br>
+                        Priority_Level, Urgency_Score
+                    </div>
+                    <p style="margin-top:12px">
+                        <strong>Priority_Level</strong>: High / Medium / Low<br>
+                        <strong>Urgency_Score</strong>: 1.0 to 10.0
+                    </p>
+                </div>
+
+                <div class="info-card reveal" style="transition-delay:0.08s">
+                    <h3><span>📊</span> How Many Samples Do You Need?</h3>
+                    <div class="samples-guide">
+                        <div class="sg-item">
+                            <div class="sg-num" style="color:var(--medium)">30+</div>
+                            <div class="sg-lbl">Minimum to start</div>
+                        </div>
+                        <div class="sg-item">
+                            <div class="sg-num" style="color:var(--accent)">200+</div>
+                            <div class="sg-lbl">Good improvement</div>
+                        </div>
+                        <div class="sg-item">
+                            <div class="sg-num" style="color:var(--low)">500+</div>
+                            <div class="sg-lbl">Best results</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card reveal" style="transition-delay:0.16s">
+                    <h3><span>🔒</span> Your Base Model is Always Safe</h3>
+                    <p>
+                        Fine-tuning creates a completely separate model file in a new folder.
+                        Your original <code
+                            style="color:var(--accent);background:var(--bg3);padding:2px 6px;border-radius:4px">best_model/</code>
+                        is never touched or overwritten.
+                    </p>
+                    <p>
+                        Every organization gets its own isolated model. Fine-tuning one organization's
+                        data never affects another's model performance.
+                    </p>
+                </div>
+
+                <div class="info-card reveal" style="transition-delay:0.24s">
+                    <h3><span>⚡</span> Freeze BERT vs Full Fine-Tune</h3>
+                    <p><strong>Freeze BERT (recommended for &lt;500 samples)</strong> — Only trains the classification
+                        heads. Prevents overfitting on small datasets. Faster training.</p>
+                    <p><strong>Full Fine-Tune (for 500+ samples)</strong> — Trains all layers including the BERT backbone.
+                        Higher accuracy ceiling but requires more labeled data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let epochs = 3;
+
+    function changeEpochs(delta) {
+        epochs = Math.max(1, Math.min(10, epochs + delta));
+        document.getElementById('epochDisplay').textContent = epochs;
+    }
+
+    function onFtFileSelect(input) {
+        const file = input.files[0];
+        if (!file) return;
+        document.getElementById('ftFileName').textContent = file.name;
+        document.getElementById('ftFileSelected').style.display = 'flex';
+        document.getElementById('ftBtn').disabled = false;
+    }
+
+    async function startFinetune() {
+        const companyName = document.getElementById('companyName').value.trim();
+        const file = document.getElementById('labeledCsv').files[0];
+        const freezeBert = document.getElementById('freezeBert').checked;
+
+        if (!companyName) { showToast('Please enter an organization name', 'error'); return; }
+        if (!file) { showToast('Please upload a labeled CSV', 'error'); return; }
+
+        const btn = document.getElementById('ftBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Starting...';
+
+        const form = new FormData();
+        form.append('labeled_csv', file);
+        form.append('company_name', companyName);
+        form.append('freeze_bert', freezeBert ? 'true' : 'false');
+        form.append('epochs', epochs);
+
+        try {
+            const res = await fetch('/api/finetune', { method: 'POST', body: form });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+            renderFtStatus(data);
+            showToast('Fine-tuning started!', 'success');
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Start Fine-Tuning →';
+        }
+    }
+
+    function renderFtStatus(d) {
+        document.getElementById('ftInfo').style.display = 'none';
+
+        const html = `
+    <div class="status-card">
+      <div class="status-icon">⚡</div>
+      <h3>Fine-Tuning Started!</h3>
+      <p>
+        The model is now training on <strong>${d.samples} labeled complaints</strong>
+        from <strong>${d.company_name || 'your organization'}</strong>.
+        Training runs in the background — this page can be closed safely.
+      </p>
+      <div style="padding:16px;background:var(--low-bg);border:1px solid rgba(16,185,129,0.2);border-radius:10px;font-size:0.875rem;color:#065f46;margin-bottom:24px">
+        ✓ Your base model is untouched. Fine-tuned model will be saved as:<br>
+        <code style="font-family:monospace">${d.model_name}/</code>
+      </div>
+      <div class="training-info">
+        <div class="ti-box">
+          <div class="ti-l">Samples</div>
+          <div class="ti-v">${d.samples}</div>
+        </div>
+        <div class="ti-box">
+          <div class="ti-l">Epochs</div>
+          <div class="ti-v">${d.epochs}</div>
+        </div>
+        <div class="ti-box">
+          <div class="ti-l">Mode</div>
+          <div class="ti-v">${d.freeze_bert ? 'Frozen' : 'Full'}</div>
+        </div>
+      </div>
+      <div style="margin-top:24px">
+        <p style="color:var(--muted);font-size:0.8rem">
+          After training completes, run inference with the fine-tuned model:<br>
+          <code style="color:var(--accent);background:var(--bg3);padding:4px 10px;border-radius:6px;font-size:0.8rem">
+            python step4_inference.py --model ${d.model_name} --input complaints.csv
+          </code>
+        </p>
+      </div>
+    </div>`;
+
+        document.getElementById('ftStatus').innerHTML = html;
+        document.getElementById('ftStatus').style.display = 'block';
+    }
+</script>
+{% endblock %}

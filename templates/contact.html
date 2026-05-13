@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+{% block title %}Contact — PriorityAI{% endblock %}
+
+{% block head %}
+<style>
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 48px;
+        align-items: start;
+    }
+
+    /* Left info */
+    .contact-info h2 {
+        font-family: var(--font-head);
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 16px;
+        line-height: 1.2;
+        color: var(--text);
+    }
+
+    .contact-info p {
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin-bottom: 36px;
+    }
+
+    .contact-methods {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .contact-method {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 18px 20px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .contact-method:hover {
+        border-color: var(--accent);
+        box-shadow: var(--shadow);
+        transform: translateX(3px);
+    }
+
+    .cm-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .cm-title {
+        font-weight: 700;
+        font-size: 0.875rem;
+        margin-bottom: 3px;
+        color: var(--text2);
+    }
+
+    .cm-value {
+        color: var(--muted);
+        font-size: 0.85rem;
+    }
+
+    .cm-value a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .cm-value a:hover {
+        text-decoration: underline;
+    }
+
+    /* Form card */
+    .contact-form-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 36px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+
+    .contact-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent), #7c3aed, var(--accent2));
+    }
+
+    .contact-form-card h2 {
+        font-family: var(--font-head);
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+        color: var(--text);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .service-checkboxes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .service-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 14px;
+        background: var(--bg3);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.18s;
+        user-select: none;
+        color: var(--text2);
+        font-weight: 500;
+    }
+
+    .service-check input {
+        display: none;
+    }
+
+    .service-check.checked {
+        border-color: var(--accent);
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+
+    .check-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        border: 1.5px solid var(--border-strong);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.65rem;
+        transition: all 0.15s;
+        background: var(--bg2);
+    }
+
+    .service-check.checked .check-dot {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .submit-result {
+        display: none;
+        padding: 24px;
+        background: var(--low-bg);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 12px;
+        text-align: center;
+        color: #065f46;
+        animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .submit-result .sr-icon {
+        font-size: 2.2rem;
+        margin-bottom: 10px;
+    }
+
+    .submit-result h3 {
+        font-family: var(--font-head);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .submit-result p {
+        font-size: 0.875rem;
+        opacity: 0.85;
+    }
+
+    @media (max-width: 900px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row,
+        .service-checkboxes {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="eyebrow">Get in Touch</div>
+        <h1>Contact Us</h1>
+        <p>Have questions about PriorityAI or want to discuss a custom deployment? We'd love to hear from you.</p>
+    </div>
+
+    <div class="contact-grid">
+        <!-- LEFT -->
+        <div class="contact-info">
+            <h2>Let's build something great together</h2>
+            <p>
+                Whether you're a startup wanting intelligent complaint routing,
+                or an enterprise looking to process thousands of customer issues daily —
+                PriorityAI can be customized for your exact needs.
+            </p>
+
+            <div class="contact-methods">
+                <div class="contact-method reveal">
+                    <div class="cm-icon" style="background:var(--accent-light)">📧</div>
+                    <div>
+                        <div class="cm-title">Email</div>
+                        <div class="cm-value"><a href="mailto:hello@priorityai.in">hello@priorityai.in</a></div>
+                    </div>
+                </div>
+                <div class="contact-method reveal" style="transition-delay:0.08s">
+                    <div class="cm-icon" style="background:var(--low-bg)">💼</div>
+                    <div>
+                        <div class="cm-title">LinkedIn</div>
+                        <div class="cm-value"><a href="#">linkedin.com/in/yourprofile</a></div>
+                    </div>
+                </div>
+                <div class="contact-method reveal" style="transition-delay:0.16s">
+                    <div class="cm-icon" style="background:#fff0f6">🐙</div>
+                    <div>
+                        <div class="cm-title">GitHub</div>
+                        <div class="cm-value"><a href="#">github.com/yourusername</a></div>
+                    </div>
+                </div>
+                <div class="contact-method reveal" style="transition-delay:0.24s">
+                    <div class="cm-icon" style="background:var(--medium-bg)">🏫</div>
+                    <div>
+                        <div class="cm-title">Institution</div>
+                        <div class="cm-value">IIIT Surat — B.Tech CSE, 2023–2027</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM -->
+        <div class="contact-form-card">
+            <h2>Send a Message</h2>
+
+            <div id="contactForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="firstName" placeholder="Rahul" />
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="lastName" placeholder="Sharma" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="text" id="email" placeholder="rahul@company.com" />
+                </div>
+
+                <div class="form-group">
+                    <label>Company / Organisation</label>
+                    <input type="text" id="company" placeholder="Your company name" />
+                </div>
+
+                <div class="form-group">
+                    <label>I'm interested in</label>
+                    <div class="service-checkboxes">
+                        <label class="service-check" onclick="toggleCheck(this)">
+                            <input type="checkbox">
+                            <div class="check-dot"></div>
+                            🔍 Single Analysis
+                        </label>
+                        <label class="service-check" onclick="toggleCheck(this)">
+                            <input type="checkbox">
+                            <div class="check-dot"></div>
+                            📊 Batch Processing
+                        </label>
+                        <label class="service-check" onclick="toggleCheck(this)">
+                            <input type="checkbox">
+                            <div class="check-dot"></div>
+                            ⚡ Fine-Tuning
+                        </label>
+                        <label class="service-check" onclick="toggleCheck(this)">
+                            <input type="checkbox">
+                            <div class="check-dot"></div>
+                            🔌 API Integration
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="message" rows="4"
+                        placeholder="Tell us about your use case, dataset size, sector, and any specific requirements..."></textarea>
+                </div>
+
+                <button class="btn btn-primary" onclick="submitForm()" style="width:100%;justify-content:center"
+                    id="submitBtn">
+                    Send Message →
+                </button>
+            </div>
+
+            <div class="submit-result" id="submitResult">
+                <div class="sr-icon">✉️</div>
+                <h3>Message Sent!</h3>
+                <p>Thank you for reaching out. We'll get back to you within 24 hours.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        const cb  = el.querySelector('input[type="checkbox"]');
+        const dot = el.querySelector('.check-dot');
+        cb.checked = el.classList.contains('checked');
+        dot.textContent = cb.checked ? '✓' : '';
+    }
+
+    function submitForm() {
+        const email = document.getElementById('email').value.trim();
+        const name  = document.getElementById('firstName').value.trim();
+        const msg   = document.getElementById('message').value.trim();
+
+        if (!name || !email || !msg) {
+            showToast('Please fill in name, email, and message', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner" style="border-top-color:#fff"></span> Sending...';
+
+        setTimeout(() => {
+            document.getElementById('contactForm').style.display = 'none';
+            document.getElementById('submitResult').style.display = 'block';
+            showToast('Message sent successfully!', 'success');
+        }, 1200);
+    }
+</script>
+{% endblock %}
